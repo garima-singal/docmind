@@ -17,10 +17,12 @@ from app.retrieval.reranker import rerank_chunks
 
 
 # Initialize LLM once at module level
+import os
+os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
+
 llm = ChatOpenAI(
     model=LLM_MODEL,
-    temperature=TEMPERATURE,
-    openai_api_key=OPENAI_API_KEY
+    temperature=TEMPERATURE
 )
 
 

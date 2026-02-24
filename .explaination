@@ -1,0 +1,22 @@
+
+1. app/ingestion/pdf_loader.py
+    load_pdf opens a PDF using PyMuPDF, loops through every page, extracts raw text, and returns it as a list of dictionaries — each containing the page text and metadata like filename and page number. The metadata is crucial later when you want to show the user which page an answer came from.
+    load_multiple_pdfs is a convenience wrapper that calls load_pdf on a list of files and merges everything together, which you'll need when a user uploads several PDFs at once.
+
+------------------------------------------------------------------------------------------------------------------------
+
+2. app/ingestion/chunker.py
+    chunk_pages uses LangChain's RecursiveCharacterTextSplitter which tries to split text intelligently — first at double newlines, then single newlines, then sentences, then words. This preserves natural text boundaries as much as possible while keeping chunks within your configured size. The overlap ensures context isn't lost between chunks.
+    chunk_pages_semantic is a simpler paragraph-based splitter included so you can compare both approaches in your notebook later. It's a great talking point in interviews — showing you experimented and didn't just use defaults.
+
+------------------------------------------------------------------------------------------------------------------------
+3. app/ingestion/embedder.py
+    embed_chunks takes your list of chunks from chunker.py and runs each chunk's text through the all-MiniLM-L6-v2 sentence transformer model, which converts text into a 384-dimensional vector. Similar text will produce vectors that are close together in this space — that's what makes semantic search possible.
+    embed_query does the same thing for a single user question at search time. It's crucial that both chunks and queries use the exact same model, otherwise the similarity comparison would be meaningless.
+    The model is loaded once at module level intentionally — loading it inside the function would cause a slow reload on every single call.
+------------------------------------------------------------------------------------------------------------------------
+4. app/retrieval/vector_store.py
+    This is your interface to ChromaDB. store_chunks takes your embedded chunks and saves them persistently to disk so they survive app restarts. retrieve_chunks is the core search function — it takes a query embedding and finds the most similar chunks using cosine similarity. The extra functions like delete_source, get_all_sources, and retrieve_chunks_by_source handle multi-document scenarios which you'll need in the UI later.
+    The upsert operation is used instead of insert so that if you upload the same PDF twice it updates existing chunks rather than creating duplicates.
+
+------------------------------------------------------------------------------------------------------------------------

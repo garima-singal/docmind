@@ -3,7 +3,6 @@
 from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
 from langchain_core.messages import SystemMessage, HumanMessage
 
-
 # ---------------------------------------------------------------------------
 # System prompt — defines the LLM's behavior and strict grounding rules
 # ---------------------------------------------------------------------------
